@@ -1,0 +1,221 @@
+QUESTION 1
+  Q1.1
+% Define the parameters
+R0 = 2.5; % Basic reproduction number
+n_days = 20; % Number of days
+
+% Part 1: Transfer Function and Pole-Zero Plot
+numerator = [1]; % Coefficient of y[n]
+denominator = [1, -R0]; % Coefficients of y[n-1]
+H1 = tf(numerator, denominator); % Transfer function
+figure;
+pzmap(H1); % Pole-zero plot
+title('Pole-Zero Plot of the System');
+
+
+
+Q1.2
+n = 0:n_days;
+delta = (n == 0); % Delta function for initial condition
+y = filter(1, [1, -R0], delta); % Solution of the difference equation
+
+% Display the time-domain equation
+disp('Time-domain equation for the number of new daily infections:');
+disp(['y[n] = δ[n] + ', num2str(R0), 'y[n-1]']);
+disp(' ');
+
+% Display the effect of the parameter R0
+disp(['Effect of R0: R0 is the average number of healthy people each infected person infects.']);
+disp(['If R0 > 1, the infection will grow exponentially. If R0 < 1, the infection will decrease.']);
+disp(' ');
+Time-domain equation for the number of new daily infections:
+y[n] = δ[n] + 2.5y[n-1]
+ 
+Effect of R0: R0 is the average number of healthy people each infected person infects.
+If R0 > 1, the infection will grow exponentially. If R0 < 1, the infection will decrease.
+
+
+
+Q1.3
+target_infections = 1e6;
+days_to_reach_target = ceil(log(target_infections) / log(R0));
+disp(['With R0 = ', num2str(R0), ', it will take approximately ', num2str(days_to_reach_target), ' days']);
+disp(['to reach ', num2str(target_infections), ' new daily infections.']);
+disp(' ');
+With R0 = 2.5, it will take approximately 16 days
+to reach 1000000 new daily infections.
+
+
+Q1.4
+
+
+
+
+Q1.5
+% Part 5: Plot new daily infections for the first 20 days and use an integrator filter
+figure;
+filtered_output = filter(1, [1, -1], y);
+stem(n, y, 'b', 'LineWidth', 2, 'Marker', 'o', 'MarkerSize', 8, 'MarkerFaceColor', 'r');
+hold on;
+plot(n, filtered_output, 'g--', 'LineWidth', 2);
+xlabel('Days');
+ylabel('Number of New Daily Infections');
+legend('New Daily Infections', 'Total Infections (Integrated)');
+title('Epidemic Modeling with R0 = 2.5');
+grid on;
+
+
+
+QUESTION 2
+
+
+% Problem 2 - Multi-pole IIR Filter
+
+% Define the coefficients for the transfer function HM(z)
+ak = [.1, .15, .25, .26, .34, .42, .25, .2, .15, .1, .1, .1];
+M = length(ak);
+
+% Part 1: Plot new daily infections for the first n = 100 days
+n_days = 100;
+n = 0:n_days;
+
+% Kronecker delta as input
+delta = (n == 0);
+
+% Implement the IIR filter
+y_multi_pole = filter(1, [1, -ak], delta);
+
+% Part 2: Use an integrator filter to obtain total infections
+filtered_output_multi_pole = filter(1, [1, -1], y_multi_pole);
+
+% Plot new daily infections and total infections
+figure;
+subplot(2, 1, 1);
+stem(n, y_multi_pole, 'b', 'LineWidth', 2, 'Marker', 'o', 'MarkerSize', 8, 'MarkerFaceColor', 'r');
+xlabel('Days');
+ylabel('Number of New Daily Infections');
+title('New Daily Infections (Multi-pole IIR Filter)');
+grid on;
+
+subplot(2, 1, 2);
+plot(n, filtered_output_multi_pole, 'g--', 'LineWidth', 2);
+xlabel('Days');
+ylabel('Total Infections');
+title('Total Infections (Integrated)');
+grid on;
+
+% Part 3: Estimate time to reach 1 million new daily infections
+target_infections_multi_pole = 1e6;
+days_to_reach_target_multi_pole = find(y_multi_pole >= target_infections_multi_pole, 1);
+
+disp(['With the multi-pole IIR filter, it will take approximately ', num2str(days_to_reach_target_multi_pole), ' days']);
+disp(['to reach ', num2str(target_infections_multi_pole), ' new daily infections.']);
+With the multi-pole IIR filter, it will take approximately 95 days
+to reach 1000000 new daily infections.
+
+
+
+
+QUESTION 3
+
+
+% Problem 3 - Effects of Social Distancing
+
+% Define the coefficients for the transfer function HM(z)
+ak = [.1, .15, .25, .26, .34, .42, .25, .2, .15, .1, .1, .1];
+M = length(ak);
+
+% Part 1: Comment on the role of ρ
+% The parameter ρ scales the coefficients, representing the reduction in social interactions.
+% ρ = 1 indicates no reduction (no social distancing), and smaller ρ values indicate increased distancing.
+
+% Part 2: Plot new daily infections for ρ = 0.25, 0.50, 0.75
+n_days = 100;
+n = 0:n_days;
+
+% Kronecker delta as input
+delta = (n == 0);
+
+% Values of ρ to test
+rho_values = [0.25, 0.50, 0.75];
+
+figure;
+for i = 1:length(rho_values)
+    rho = rho_values(i);
+    
+    % Implement the IIR filter with scaled coefficients
+    scaled_ak = (1 - rho) * ak;
+    y_social_distanced = filter(1, [1, -scaled_ak], delta);
+    
+    % Use an integrator filter to obtain total infections
+    filtered_output_social_distanced = filter(1, [1, -1], y_social_distanced);
+    
+    % Plot new daily infections
+    subplot(length(rho_values), 1, i);
+    stem(n, y_social_distanced, 'b', 'LineWidth', 2, 'Marker', 'o', 'MarkerSize', 8, 'MarkerFaceColor', 'r');
+    xlabel('Days');
+    ylabel(['New Daily Infections (ρ = ', num2str(rho), ')']);
+    title(['Effects of Social Distancing: ρ = ', num2str(rho)]);
+    grid on;
+end
+
+% Part 3: Comment on the effects of social distancing
+% Social distancing reduces the number of total infections by scaling the coefficients.
+% Smaller ρ values result in more significant reductions in new daily infections and total infections.
+
+disp(' ');
+disp('Effects of Social Distancing:');
+disp('Social distancing helps by reducing the number of encounters between sick and healthy individuals,');
+disp('which in turn lowers the coefficients in the filter and decreases the spread of the infection.');
+Social distancing helps by reducing the number of encounters between sick and healthy individuals,
+which in turn lowers the coefficients in the filter and decreases the spread of the infection.
+
+
+
+QUESTION 4
+
+% Problem 4 - Saturation and Towards Normality
+
+% Parameters
+R0 = 1.15;
+K = 1e6;
+n_days = 100;
+n = 0:n_days;
+
+% Logistic function
+x_logistic = K ./ (1 + ((K * (R0 - 1) - R0) * R0.^(-(n+1) - 1)) / (R0 - 1));
+
+% First-order model
+y_first_order = filter(1, [1, -R0], (n == 0));
+
+% Plot the total number of infections for the first-order model vs. the logistic evolution
+figure;
+plot(n, cumsum(y_first_order), 'b', 'LineWidth', 2, 'Marker', 'o', 'MarkerSize', 8, 'MarkerFaceColor', 'r');
+hold on;
+plot(n, x_logistic, 'g--', 'LineWidth', 4);
+xlabel('Days');
+ylabel('Total Infections');
+title('First-Order Model vs. Logistic Evolution');
+legend('First-Order Model', 'Logistic Evolution');
+grid on;
+
+% Find the point of inflection
+% First derivative using FIR filter D1(z) = 1 - z^(-1)
+d1_filter = [1, -1];
+derivative1 = filter(d1_filter, 1, x_logistic);
+
+% Second derivative using FIR filter D2(z) = 1 - 2z^(-1) + z^(-2)
+d2_filter = [1, -2, 1];
+derivative2 = filter(d2_filter, 1, x_logistic);
+
+% Find the point of inflection using the global maximum of the first derivative
+inflection_point_max = find(derivative1 == max(derivative1), 1);
+
+% Find the point of inflection using the zero-crossing of the second derivative
+inflection_point_zero_crossing = find(derivative2(1:end-1) .* derivative2(2:end) <= 0, 1);
+
+disp(' ');
+disp(['Point of inflection (max of first derivative): Day ', num2str(inflection_point_max)]);
+disp(['Point of inflection (zero-crossing of second derivative): Day ', num2str(inflection_point_zero_crossing)]);
+Point of inflection (max of first derivative): Day 98
+Point of inflection (zero-crossing of second derivative): Day 1
